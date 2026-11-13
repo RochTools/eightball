@@ -831,11 +831,12 @@
     g.fillStyle = b.type === 'stripe' ? '#f4f1e8' : b.color;
     g.fillRect(-r, -r, 2 * r, 2 * r);
     // half balls: keep the pole tilted away from the viewer so the white sides + colour band always read as 'half'
-    const s = b.type === 'stripe' ? normalize3(b.s.x, b.s.y, Math.max(-0.55, Math.min(0.55, b.s.z))) : b.s;
+    const s = b.type === 'stripe' ? normalize3(b.s.x, b.s.y, Math.max(-0.26, Math.min(0.26, b.s.z))) : b.s;
     if (b.type === 'stripe') {
       const rot = Math.atan2(s.y, s.x) + Math.PI / 2;
-      g.strokeStyle = b.color; g.lineWidth = r * 1.05;
-      g.beginPath(); g.ellipse(0, 0, r * 1.02, Math.max(0.01, r * Math.abs(s.z)) * 1.02, rot, 0, Math.PI * 2); g.stroke();
+      const m = r * Math.abs(s.z);                  // band half-height stays ~0.55r whatever the roll: always a clear colour band between white caps
+      g.strokeStyle = b.color; g.lineWidth = 2 * (r * 0.55 - m) + 0.5;
+      g.beginPath(); g.ellipse(0, 0, r * 1.05, Math.max(0.01, m), rot, 0, Math.PI * 2); g.stroke();
     }
     if (b.n !== 0) {
       const pole = s.z >= 0 ? s : { x: -s.x, y: -s.y, z: -s.z };
