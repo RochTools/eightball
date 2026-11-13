@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1320" height="780" viewBox="60 60 1320 780" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">Classic six-pocket pool table</title>
+  <desc id="description">An empty, top-down pool table in emerald green felt and walnut, with a pocket in each of its four corners and one at the center of each long side. No balls or cue.</desc>
+  <defs>
+    <linearGradient id="body" x1="720" y1="105" x2="720" y2="819" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3D2C20"/><stop offset=".83" stop-color="#231C15"/><stop offset="1" stop-color="#0D120E"/>
+    </linearGradient>
+    <linearGradient id="walnut" x1="200" y1="95" x2="1080" y2="815" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8A6743"/><stop offset=".18" stop-color="#725033"/><stop offset=".51" stop-color="#533A28"/><stop offset=".8" stop-color="#6E4C30"/><stop offset="1" stop-color="#493322"/>
+    </linearGradient>
+    <linearGradient id="outerBevel" x1="720" y1="104" x2="720" y2="796" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C8A273"/><stop offset=".15" stop-color="#705132"/><stop offset=".7" stop-color="#60442B"/><stop offset="1" stop-color="#A77D4E"/>
+    </linearGradient>
+    <linearGradient id="innerBevel" x1="720" y1="147" x2="720" y2="753" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#271F15"/><stop offset=".5" stop-color="#151E15"/><stop offset="1" stop-color="#9F794E"/>
+    </linearGradient>
+    <radialGradient id="felt" cx=".45" cy=".4" r=".75">
+      <stop stop-color="#278C6D"/><stop offset=".46" stop-color="#218263"/><stop offset=".83" stop-color="#1A7257"/><stop offset="1" stop-color="#16654E"/>
+    </radialGradient>
+    <linearGradient id="cushionTop" x1="0" y1="152" x2="0" y2="193" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F8B6D"/><stop offset=".18" stop-color="#287B5F"/><stop offset=".78" stop-color="#226D52"/><stop offset="1" stop-color="#134F3D"/>
+    </linearGradient>
+    <linearGradient id="cushionBottom" x1="0" y1="708" x2="0" y2="748" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C634C"/><stop offset=".22" stop-color="#32916F"/><stop offset=".75" stop-color="#267D5F"/><stop offset="1" stop-color="#164D3B"/>
+    </linearGradient>
+    <linearGradient id="cushionLeft" x1="164" y1="0" x2="205" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#388F70"/><stop offset=".18" stop-color="#2C7C5F"/><stop offset=".8" stop-color="#226D52"/><stop offset="1" stop-color="#134F3D"/>
+    </linearGradient>
+    <linearGradient id="cushionRight" x1="1235" y1="0" x2="1276" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#19583F"/><stop offset=".2" stop-color="#318A68"/><stop offset=".8" stop-color="#287A5B"/><stop offset="1" stop-color="#164A35"/>
+    </linearGradient>
+    <linearGradient id="leather" x1="-45" y1="-48" x2="30" y2="35" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#494034"/><stop offset=".18" stop-color="#302C23"/><stop offset=".55" stop-color="#201F19"/><stop offset="1" stop-color="#141A13"/>
+    </linearGradient>
+    <linearGradient id="pocketRing" x1="-28" y1="-31" x2="26" y2="31" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#887450"/><stop offset=".18" stop-color="#474333"/><stop offset=".55" stop-color="#181F16"/><stop offset="1" stop-color="#676044"/>
+    </linearGradient>
+    <radialGradient id="pocketDepth" cx=".52" cy=".35" r=".78">
+      <stop offset=".3" stop-color="#030906"/><stop offset=".75" stop-color="#060E09"/><stop offset="1" stop-color="#18251A"/>
+    </radialGradient>
+    <linearGradient id="pearl" x1="-3" y1="-6" x2="3" y2="6" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0E4C9"/><stop offset=".5" stop-color="#BDAF8B"/><stop offset="1" stop-color="#E4D8B9"/>
+    </linearGradient>
+    <linearGradient id="shadeTop" x1="0" y1="192" x2="0" y2="225" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#05291E" stop-opacity=".33"/><stop offset="1" stop-color="#05291E" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shadeBottom" x1="0" y1="708" x2="0" y2="681" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#05291E" stop-opacity=".18"/><stop offset="1" stop-color="#05291E" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shadeLeft" x1="204" y1="0" x2="233" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#05291E" stop-opacity=".28"/><stop offset="1" stop-color="#05291E" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shadeRight" x1="1236" y1="0" x2="1207" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#05291E" stop-opacity=".2"/><stop offset="1" stop-color="#05291E" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="woodGrain" width="400" height="58" patternUnits="userSpaceOnUse">
+      <path d="M-30 8C55 1 95 19 169 10S309 0 431 11M-23 15C61 6 112 24 187 16S329 7 421 17M-17 32C75 22 151 42 224 31S365 25 426 34M-20 40C70 32 153 48 227 40S345 32 419 42M-22 51C79 41 124 59 207 50S332 44 424 53" stroke="#D5B07C" stroke-width=".65" opacity=".24"/>
+      <path d="M-10 4C81 13 119 -3 202 5S343 13 412 5M-9 25C79 34 151 17 239 26S354 33 417 26M-5 47C84 55 171 39 250 46S347 56 414 47" stroke="#211B13" stroke-width="1" opacity=".25"/>
+      <path d="M72 19C105 13 140 14 165 20 143 25 99 25 72 19ZM87 19C110 17 129 17 148 20" stroke="#291E14" stroke-width=".65" opacity=".25"/>
+    </pattern>
+    <pattern id="net" width="11" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(10)">
+      <path d="M0 0 11 11M11 0 0 11" stroke="#778271" stroke-width=".75"/>
+    </pattern>
+    <filter id="feltNoise" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".78" numOctaves="3" stitchTiles="stitch" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".1"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="soft-light"/>
+    </filter>
+    <filter id="shadow" x="-15%" y="-20%" width="130%" height="145%">
+      <feGaussianBlur stdDeviation="19"/>
+    </filter>
+    <filter id="railShadow" x="-5%" y="-10%" width="110%" height="125%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#00190F" flood-opacity=".38"/>
+    </filter>
+    <clipPath id="woodClip"><rect x="112" y="112" width="1216" height="676" rx="57"/></clipPath>
+    <clipPath id="bedClip"><rect x="164" y="152" width="1112" height="596" rx="28"/></clipPath>
+    <clipPath id="holeClip"><circle r="28.5"/></clipPath>
+    <g id="sight">
+      <path d="M0-6 3.5 0 0 6-3.5 0Z" fill="url(#pearl)" stroke="#33291B" stroke-width=".8"/>
+      <path d="M0-4.2 1.5 0 0 4.2-1.5 0Z" fill="#F5EBCD" opacity=".32"/>
+    </g>
+    <g id="hole">
+      <circle r="35" fill="#10190F"/>
+      <circle r="32.5" fill="url(#pocketRing)"/>
+      <circle r="29.4" fill="url(#pocketDepth)" stroke="#030A06" stroke-width="2"/>
+      <g clip-path="url(#holeClip)">
+        <path d="M-29 13Q0-1 29 13V31H-29Z" fill="url(#net)" opacity=".12"/>
+        <path d="M-26 14Q0 3 26 14M-22 22Q0 12 22 22" stroke="#5B6B53" stroke-width=".7" opacity=".12"/>
+      </g>
+      <path d="M-25-17A30 30 0 0 1 25-17" stroke="#ABA079" stroke-width=".8" opacity=".27"/>
+      <path d="M-20 25Q0 36 21 25" stroke="#839071" stroke-width=".9" opacity=".25"/>
+    </g>
+    <g id="cornerPocket">
+      <path d="M-56-39Q-53-58-34-61H-7L43-16Q55-5 45 10L14 42Q1 55-13 44L-61-4V-23Q-61-32-56-39Z" fill="#0D140F" stroke="#0C140D" stroke-width="4"/>
+      <path d="M-56-39Q-53-58-34-61H-7L43-16Q55-5 45 10L14 42Q1 55-13 44L-61-4V-23Q-61-32-56-39Z" fill="url(#leather)" stroke="#7F7355" stroke-opacity=".45" stroke-width="1"/>
+      <path d="M-49-34Q-47-51-31-53H-10L36-12Q44-4 37 5L9 35Q1 42-8 35L-53-8V-22Q-53-29-49-34Z" stroke="#A59068" stroke-opacity=".35" stroke-width=".9" stroke-dasharray="2 3"/>
+      <path d="M19-14 42 9 11 41-13 18Z" fill="#07150D"/>
+      <use xlink:href="#hole"/>
+    </g>
+    <g id="middlePocket">
+      <path d="M-41-48Q0-57 41-48L44-10Q41 7 29 23Q0 44-29 23Q-41 7-44-10Z" fill="#11170F" stroke="#0B140C" stroke-width="4"/>
+      <path d="M-41-48Q0-57 41-48L44-10Q41 7 29 23Q0 44-29 23Q-41 7-44-10Z" fill="url(#leather)" stroke="#7F7355" stroke-opacity=".5" stroke-width="1"/>
+      <path d="M-34-41Q0-48 34-41L37-11Q34 5 24 17Q0 35-24 17Q-34 5-37-11Z" stroke="#A59068" stroke-opacity=".35" stroke-width=".9" stroke-dasharray="2 3"/>
+      <path d="M-25-8-36 22Q0 39 36 22L25-8Z" fill="#06130B"/>
+      <use xlink:href="#hole"/>
+    </g>
+  </defs>
+
+  <!-- A shallow cabinet edge and a soft floor shadow keep the view entirely overhead. -->
+  <rect x="121" y="137" width="1198" height="669" rx="62" fill="#000" opacity=".58" filter="url(#shadow)"/>
+  <rect x="105" y="115" width="1230" height="703" rx="64" fill="#0C120D"/>
+  <rect x="108" y="113" width="1224" height="697" rx="62" fill="url(#body)" stroke="#09100B" stroke-width="3"/>
+  <path d="M137 776Q149 804 176 804H1264Q1291 804 1303 776" stroke="#9E7748" stroke-width="1.2" opacity=".34"/>
+
+  <!-- Solid walnut rails, with fine grain, bevels and an inlaid inner edge. -->
+  <rect x="104" y="104" width="1232" height="692" rx="64" fill="#1A2116" stroke="#0B120C" stroke-width="5"/>
+  <rect x="108" y="108" width="1224" height="684" rx="60" fill="url(#outerBevel)"/>
+  <rect x="113" y="113" width="1214" height="674" rx="56" fill="url(#walnut)"/>
+  <g clip-path="url(#woodClip)">
+    <rect x="112" y="112" width="1216" height="676" fill="url(#woodGrain)"/>
+    <rect x="112" y="112" width="51" height="676" fill="url(#walnut)"/>
+    <rect x="1277" y="112" width="51" height="676" fill="url(#walnut)"/>
+    <path d="M120 730V177Q120 127 171 127H1269Q1314 127 1314 174V730" stroke="#D7AB72" stroke-opacity=".17" stroke-width="1"/>
+    <path d="M132 731V183Q132 140 177 140M1308 731V183Q1308 140 1263 140" stroke="#2E2318" stroke-opacity=".55" stroke-width="1.2"/>
+    <g transform="translate(112 112)">
+      <path d="M9 0C3 95 18 140 10 227S3 384 11 676M20 0C12 104 30 173 21 258S14 441 22 676M35 0C28 85 41 172 35 261S29 437 37 676M45 0C38 109 51 176 45 290S38 496 46 676" stroke="#C69F6B" stroke-opacity=".15" stroke-width=".8"/>
+    </g>
+    <g transform="translate(1277 112)">
+      <path d="M9 0C3 95 18 140 10 227S3 384 11 676M20 0C12 104 30 173 21 258S14 441 22 676M35 0C28 85 41 172 35 261S29 437 37 676M45 0C38 109 51 176 45 290S38 496 46 676" stroke="#C69F6B" stroke-opacity=".14" stroke-width=".8"/>
+    </g>
+  </g>
+  <rect x="153" y="141" width="1134" height="618" rx="36" fill="url(#innerBevel)" stroke="#C39C64" stroke-opacity=".4" stroke-width="1"/>
+  <rect x="160" y="148" width="1120" height="604" rx="30" fill="#0B3526" stroke="#0D2015" stroke-width="5"/>
+
+  <!-- The empty 2:1 playing surface. -->
+  <rect x="164" y="152" width="1112" height="596" rx="28" fill="url(#felt)"/>
+  <g clip-path="url(#bedClip)">
+    <rect x="164" y="152" width="1112" height="596" fill="url(#felt)" filter="url(#feltNoise)" opacity=".42"/>
+    <rect x="204" y="192" width="1032" height="34" fill="url(#shadeTop)"/>
+    <rect x="204" y="680" width="1032" height="28" fill="url(#shadeBottom)"/>
+    <rect x="204" y="192" width="30" height="516" fill="url(#shadeLeft)"/>
+    <rect x="1206" y="192" width="30" height="516" fill="url(#shadeRight)"/>
+  </g>
+
+  <!-- Six individually mitred cushions leave all six pocket mouths open. -->
+  <g filter="url(#railShadow)" stroke="#0F4B35" stroke-width="1.2" stroke-linejoin="round">
+    <path d="M233 154H677L694 174 684 192H239L217 172Z" fill="url(#cushionTop)"/>
+    <path d="M763 154H1207L1223 172 1201 192H756L746 174Z" fill="url(#cushionTop)"/>
+    <path d="M165 223 184 210 204 236V664L184 686 165 677Z" fill="url(#cushionLeft)"/>
+    <path d="M1275 223 1256 210 1236 236V664L1256 686 1275 677Z" fill="url(#cushionRight)"/>
+    <path d="M239 708H684L694 726 677 746H233L217 728Z" fill="url(#cushionBottom)"/>
+    <path d="M756 708H1201L1223 728 1207 746H763L746 726Z" fill="url(#cushionBottom)"/>
+  </g>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M237 157H675M765 157H1203M169 226V674M1271 226V674" stroke="#84C19E" stroke-width="1" opacity=".27"/>
+    <path d="M240 191H683M757 191H1200M203 237V663M1237 237V663" stroke="#0B3F2D" stroke-width="2" opacity=".62"/>
+    <path d="M241 710H682M758 710H1199" stroke="#8CCBA8" stroke-width="1.2" opacity=".4"/>
+    <path d="M236 743H675M765 743H1204" stroke="#103E2C" stroke-width="1.2" opacity=".65"/>
+    <path d="M219 172 240 190M694 174 684 190M746 174 757 190M1221 172 1200 190M184 212 202 237M1256 212 1238 237" stroke="#78AE8D" stroke-width=".8" opacity=".19"/>
+  </g>
+
+  <!-- Mother-of-pearl diamond sights: six along each long rail, three on each short rail. -->
+  <g>
+    <use xlink:href="#sight" x="333" y="131"/><use xlink:href="#sight" x="462" y="131"/><use xlink:href="#sight" x="591" y="131"/>
+    <use xlink:href="#sight" x="849" y="131"/><use xlink:href="#sight" x="978" y="131"/><use xlink:href="#sight" x="1107" y="131"/>
+    <use xlink:href="#sight" x="333" y="769"/><use xlink:href="#sight" x="462" y="769"/><use xlink:href="#sight" x="591" y="769"/>
+    <use xlink:href="#sight" x="849" y="769"/><use xlink:href="#sight" x="978" y="769"/><use xlink:href="#sight" x="1107" y="769"/>
+    <g transform="translate(136 321) rotate(90)"><use xlink:href="#sight"/></g>
+    <g transform="translate(136 450) rotate(90)"><use xlink:href="#sight"/></g>
+    <g transform="translate(136 579) rotate(90)"><use xlink:href="#sight"/></g>
+    <g transform="translate(1304 321) rotate(90)"><use xlink:href="#sight"/></g>
+    <g transform="translate(1304 450) rotate(90)"><use xlink:href="#sight"/></g>
+    <g transform="translate(1304 579) rotate(90)"><use xlink:href="#sight"/></g>
+  </g>
+
+  <!-- Understated head and foot spots, and a printed cloth maker's mark. -->
+  <circle cx="462" cy="450" r="2.2" fill="#D2DFBB" opacity=".46"/>
+  <circle cx="978" cy="450" r="3" fill="#0B4932" opacity=".75"/>
+  <circle cx="978" cy="450" r="1.25" fill="#C6D9B5" opacity=".42"/>
+  <g opacity=".13" fill="#D4E3BF">
+    <path d="M720 421 724 427 720 433 716 427Z"/>
+    <text x="720" y="452" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" letter-spacing="4">EIGHTBALL</text>
+    <text x="720" y="468" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="6.5" letter-spacing="2.7">THE CLASSIC TABLE</text>
+  </g>
+
+  <!-- Four corner pockets and two side-center pockets. -->
+  <g id="pockets">
+    <g id="pocket-top-left" transform="translate(194 182)"><use xlink:href="#cornerPocket"/></g>
+    <g id="pocket-top-right" transform="translate(1246 182) scale(-1 1)"><use xlink:href="#cornerPocket"/></g>
+    <g id="pocket-bottom-left" transform="translate(194 718) scale(1 -1)"><use xlink:href="#cornerPocket"/></g>
+    <g id="pocket-bottom-right" transform="translate(1246 718) scale(-1 -1)"><use xlink:href="#cornerPocket"/></g>
+    <g id="pocket-top-middle" transform="translate(720 170)"><use xlink:href="#middlePocket"/></g>
+    <g id="pocket-bottom-middle" transform="translate(720 730) scale(1 -1)"><use xlink:href="#middlePocket"/></g>
+  </g>
+</svg>
