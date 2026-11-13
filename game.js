@@ -830,7 +830,8 @@
     g.save(); g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.clip();
     g.fillStyle = b.type === 'stripe' ? '#f4f1e8' : b.color;
     g.fillRect(-r, -r, 2 * r, 2 * r);
-    const s = b.s;
+    // half balls: keep the pole tilted away from the viewer so the white sides + colour band always read as 'half'
+    const s = b.type === 'stripe' ? normalize3(b.s.x, b.s.y, Math.max(-0.55, Math.min(0.55, b.s.z))) : b.s;
     if (b.type === 'stripe') {
       const rot = Math.atan2(s.y, s.x) + Math.PI / 2;
       g.strokeStyle = b.color; g.lineWidth = r * 1.05;
