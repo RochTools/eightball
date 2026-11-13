@@ -830,17 +830,32 @@
     g.save(); g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.clip();
     g.fillStyle = b.type === 'stripe' ? '#f4f1e8' : b.color;
     g.fillRect(-r, -r, 2 * r, 2 * r);
-    // half balls: keep the pole tilted away from the viewer so the white sides + colour band always read as 'half'
-    const s = b.type === 'stripe' ? normalize3(b.s.x, b.s.y, Math.max(-0.26, Math.min(0.26, b.s.z))) : b.s;
-    if (b.type === 'stripe') {
-      const rot = Math.atan2(s.y, s.x) + Math.PI / 2;
-      const m = r * Math.abs(s.z);                  // band half-height stays ~0.55r whatever the roll: always a clear colour band between white caps
-      g.strokeStyle = b.color; g.lineWidth = 2 * (r * 0.55 - m) + 0.5;
-      g.beginPath(); g.ellipse(0, 0, r * 1.05, Math.max(0.01, m), rot, 0, Math.PI * 2); g.stroke();
+    const isStripe = b.type === 'stripe';
+    // half balls: the colour band is drawn exactly as on a sphere (|p·pole| < 0.55). The pole is kept mostly side-on (|z| <= 0.5),
+    // so the band always crosses the middle of the ball and both white caps always show, while it still visibly rolls.
+    let s = b.s;
+    if (isStripe) { const z = Math.max(-0.5, Math.min(0.5, s.z)); s = Math.hypot(s.x, s.y) < 1e-3 ? { x: 0.87, y: 0, z: z } : normalize3(s.x, s.y, z); }
+    if (isStripe) {
+      if (!b.bandCv || b.bandCv.width !== D) { b.bandCv = document.createElement('canvas'); b.bandCv.width = D; b.bandCv.height = D; b.bandCtx = b.bandCv.getContext('2d'); b.bandImg = b.bandCtx.createImageData(D, D); }
+      const img = b.bandImg, d = img.data, cx = D / 2, rr = D / 2, cr = parseInt(b.color.slice(1, 3), 16), cg = parseInt(b.color.slice(3, 5), 16), cb = parseInt(b.color.slice(5, 7), 16);
+      const HALF = 0.55, EDGE = 1.6 / rr;
+      for (let y = 0; y < D; y++) {
+        const ny = (y + 0.5 - cx) / rr;
+        for (let x = 0; x < D; x++) {
+          const nx = (x + 0.5 - cx) / rr, q = nx * nx + ny * ny, o = (y * D + x) * 4;
+          if (q >= 1) { d[o + 3] = 0; continue; }
+          const dot = Math.abs(nx * s.x + ny * s.y + Math.sqrt(1 - q) * s.z);
+          let a = (HALF - dot) / EDGE + 0.5; a = a < 0 ? 0 : a > 1 ? 1 : a;
+          d[o] = cr; d[o + 1] = cg; d[o + 2] = cb; d[o + 3] = a * 255;
+        }
+      }
+      b.bandCtx.putImageData(img, 0, 0);
+      g.drawImage(b.bandCv, -D / (2 * k), -D / (2 * k), D / k, D / k);
     }
     if (b.n !== 0) {
-      const pole = s.z >= 0 ? s : { x: -s.x, y: -s.y, z: -s.z };
-      const px = pole.x * r, py = pole.y * r, sq = Math.max(0.05, pole.z), spotR = r * 0.5;
+      // solids: number disc at the pole; halves: number disc sits in the middle of the band, facing the viewer
+      const pole = isStripe ? normalize3(-s.z * s.x, -s.z * s.y, 1 - s.z * s.z) : (s.z >= 0 ? s : { x: -s.x, y: -s.y, z: -s.z });
+      const px = pole.x * r, py = pole.y * r, sq = Math.max(0.05, pole.z), spotR = r * (isStripe ? 0.42 : 0.5);
       g.save();
       g.translate(px, py); g.rotate(Math.atan2(pole.y, pole.x)); g.scale(sq, 1);
       g.fillStyle = '#f6f3ea'; g.beginPath(); g.arc(0, 0, spotR, 0, Math.PI * 2); g.fill();
