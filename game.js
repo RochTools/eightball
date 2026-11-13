@@ -79,6 +79,7 @@
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return null;
         this.ctx = new AC();
+        setTimeout(() => this.load(), 0);
         const len = this.ctx.sampleRate * 0.5;
         this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
         const d = this.noise.getChannelData(0);
@@ -99,16 +100,40 @@
     },
     click(strength) {
       const now = performance.now(); if (now - this.lastClick < 22) return; this.lastClick = now;
+      if (this.play('ball', 0.35 + strength * 0.65)) return;
       this.burst(2600 + strength * 900, 1.1, 0.045 + strength * 0.03, Math.min(0.9, 0.08 + strength * 0.7));
     },
-    cushion(strength) { this.burst(420, 1.4, 0.09, Math.min(0.5, 0.05 + strength * 0.35)); },
+    cushion(strength) { if (this.play('cushion', 0.3 + strength)) return; this.burst(420, 1.4, 0.09, Math.min(0.5, 0.05 + strength * 0.35)); },
     pocket() {
+      if (this.play('pocket')) return;
       const c = this.ensure(); if (!c) return;
       const o = c.createOscillator(); const g = c.createGain(); const t = c.currentTime;
       o.type = 'sine'; o.frequency.setValueAtTime(340, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.18);
       g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
       o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.25);
       this.burst(900, 0.8, 0.12, 0.18);
+    },
+    /* Optional mp3 files in sounds/ (first name that exists is used; a missing file keeps the built-in synth sound):
+       shot.mp3 cue hits the ball | ball.mp3 ball touches ball | foul.mp3 wrong ball / foul | gameover.mp3 game over
+       (optional: cushion.mp3 rail, pocket.mp3 ball drops in) */
+    FILES: { shot: ['shot', 'cue'], ball: ['ball', 'click'], foul: ['foul', 'wrong'], gameover: ['gameover', 'win'], cushion: ['cushion', 'rail'], pocket: ['pocket'] },
+    VOL: { shot: 1, ball: 0.9, foul: 1, gameover: 1, cushion: 0.7, pocket: 0.9 },
+    buf: {}, loading: false,
+    async load() {
+      const c = this.ctx; if (this.loading || !c) return; this.loading = true;
+      await Promise.all(Object.keys(this.FILES).map(async (key) => {
+        for (const name of this.FILES[key]) {
+          try { const r = await fetch('sounds/' + name + '.mp3'); if (!r.ok) continue; this.buf[key] = await c.decodeAudioData(await r.arrayBuffer()); return; }
+          catch (_) { /* missing / not decodable: try the next name */ }
+        }
+      }));
+    },
+    play(key, vol) {
+      const b = this.buf[key]; if (!b || !this.enabled) return false;
+      const c = this.ensure(); if (!c) return false;
+      const src = c.createBufferSource(); src.buffer = b;
+      const g = c.createGain(); g.gain.value = Math.min(1, (this.VOL[key] || 1) * (vol === undefined ? 1 : vol));
+      src.connect(g).connect(c.destination); src.start(); return true;
     },
     toggle() {
       this.enabled = !this.enabled;
@@ -453,7 +478,7 @@
     const cue = cueBall();
     const speed = MAX_SPEED * (0.12 + 0.88 * game.power);
     cue.vx = Math.cos(game.aim) * speed; cue.vy = Math.sin(game.aim) * speed;
-    audio.click(Math.min(1, game.power));
+    if (!audio.play('shot', 0.4 + 0.6 * game.power)) audio.click(Math.min(1, game.power));
     game.shot = { firstContact: null, pocketed: [], rails: 0, player: game.current, breakShot: game.breakShot, groupsBefore: [...game.groups],
       clearedBefore: game.groups[game.current] ? remaining(game.groups[game.current]) === 0 : false };
     game.stats[game.current].shots++;
@@ -507,6 +532,7 @@
     game.breakShot = false;
 
     if (foul) {
+      if (!audio.play('foul')) audio.burst(180, 1, 0.25, 0.3);
       game.current = opp;
       game.ballInHand = true;
       game.kitchenOnly = shot.breakShot && scratch;
@@ -569,6 +595,7 @@
   function endGame(winner, reason) {
     game.winner = winner;
     setState('over');
+    if (!audio.play('gameover')) audio.burst(300, 0.8, 0.4, 0.3);
     setStatus('Game over', `${playerName(winner)} wins`, reason, 'good');
     ui.endTitle.textContent = `${playerName(winner)} win${game.mode === 'cpu' && winner === 0 ? '' : 's'}`;
     ui.endReason.textContent = reason;
