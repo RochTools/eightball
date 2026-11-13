@@ -9,7 +9,7 @@
   const PLAY = { left: 204, right: 1236, top: 192, bottom: 708 };
   const HEAD_X = 462;               // head string / head spot
   const FOOT = { x: 978, y: 450 };  // foot spot (rack apex)
-  const R = 14;                     // ball radius
+  const R = 17;                     // ball radius
 
   const POCKETS = [
     { x: 194, y: 182, r: 29, corner: true },
