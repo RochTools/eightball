@@ -163,6 +163,7 @@
     ballInHand: false,
     kitchenOnly: false,
     breakShot: true,
+    visits: 1,                  // shots the current player still owns (a foul gives the opponent 2)
     aim: Math.PI,               // radians, direction cue ball will travel
     power: 0.55,
     shot: null,                 // bookkeeping for the shot in progress
@@ -211,7 +212,7 @@
     game.balls = rack();
     game.current = 0;
     game.groups = [null, null];
-    game.breakShot = true;
+    game.breakShot = true; game.visits = 1;
     game.ballInHand = true;
     game.kitchenOnly = true;
     game.aim = 0;
@@ -513,11 +514,17 @@
       if (!myGroup && first.n === 8) foul = 'Hit the 8-ball first on an open table';
       else if (myGroup && first.type !== myGroup && !(first.n === 8 && shot.clearedBefore)) foul = `Hit ${first.n === 8 ? 'the 8-ball' : 'an opponent\u2019s ball'} first`;
     }
+    if (!foul && !shot.breakShot && myGroup && potted.some((b) => b.n !== 8 && b.type !== myGroup)) foul = 'Potted an opponent\u2019s ball';
 
     // 8-ball on the break: re-spot, play on.
     if (eight && shot.breakShot) {
       respotEight();
       potted.splice(potted.indexOf(eight), 1);
+    } else if (eight && !shot.clearedBefore) {
+      // 8-ball sunk while balls are still left: the game goes on, the 8 goes back to its rack spot, the opponent gets 2 shots.
+      respotEight();
+      potted.splice(potted.indexOf(eight), 1);
+      foul = foul || 'Sank the 8-ball too early \u2014 it goes back';
     } else if (eight) {
       const win = shot.clearedBefore && !foul;
       return endGame(win ? me : opp, win ? `${playerName(me)} cleared the table and sank the 8-ball.`
@@ -542,16 +549,18 @@
 
     if (foul) {
       if (!audio.play('foul')) audio.burst(180, 1, 0.25, 0.3);
-      game.current = opp;
-      game.ballInHand = true;
-      game.kitchenOnly = shot.breakShot && scratch;
-      if (!cue.inPlay) placeCueDefault();
-      setStatus('Foul', `${playerName(opp)} — ball in hand`, foul, 'foul');
+      game.current = opp; game.visits = 2;
+      game.ballInHand = scratch; game.kitchenOnly = true;      // a pocketed cue ball is placed behind the head line only
+      if (scratch) placeCueDefault();
+      setStatus('Foul', `${playerName(opp)} \u2014 2 shots`, foul, 'foul');
     } else if (continueTurn) {
       const names = potted.map((b) => b.n).join(', ');
       setStatus(shot.breakShot ? 'Break' : 'Nice', `${playerName(me)} shoots again`, assignedNow ? `${playerName(me)} is ${groupLabel(assignedNow)} · potted ${names}` : `Potted ${names}`, 'good');
+    } else if (game.visits > 1) {
+      game.visits--;
+      setStatus('2nd shot', `${playerName(me)} shoots again`, 'One shot left from the foul', '');
     } else {
-      game.current = opp;
+      game.current = opp; game.visits = 1;
       setStatus('Turn', `${playerName(opp)} to shoot`, game.groups[opp] ? `${groupLabel(game.groups[opp])}${remaining(game.groups[opp]) === 0 ? ' · on the 8-ball' : ''}` : 'Open table', '');
     }
     if (!foul && game.groups[me] && remaining(game.groups[me]) === 0 && continueTurn) {
@@ -568,9 +577,10 @@
 
   function respotEight() {
     const eight = game.balls.find((b) => b.n === 8);
-    let x = FOOT.x, y = FOOT.y;
+    const dx = (2 * R + 0.6) * Math.cos(Math.PI / 6);
+    let x = FOOT.x + 2 * dx, y = FOOT.y;              // its original place in the rack (middle of the 3rd row)
     while (overlapsBall(x, y, eight) && x < PLAY.right - R) x += 2;
-    if (overlapsBall(x, y, eight)) { x = FOOT.x; while (overlapsBall(x, y, eight) && x > PLAY.left + R) x -= 2; }
+    if (overlapsBall(x, y, eight)) { x = FOOT.x + 2 * dx; while (overlapsBall(x, y, eight) && x > PLAY.left + R) x -= 2; }
     Object.assign(eight, { x, y, vx: 0, vy: 0, inPlay: true, sinking: null });
   }
 
