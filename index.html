@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#141d17">
+  <meta name="theme-color" content="#0a2d96">
   <meta name="description" content="Eightball — a classic 8-ball pool game. Two players or versus the computer. Installable, works offline.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -58,18 +58,10 @@
   <!-- Menu / start screen -->
   <div class="overlay" id="start-overlay">
     <div class="panel">
-      <div class="panel-brand" aria-hidden="true"><span class="brand-mark large">8</span></div>
       <h1>Eightball</h1>
-      <p class="panel-lead">Classic 8-ball. Seven full, seven half, the black eight and the white cue ball.</p>
-      <div class="mode-buttons">
-        <button class="mode-button" type="button" data-mode="pvp">
-          <span class="mode-title">Two players</span>
-          <span class="mode-desc">Pass and play on one device</span>
-        </button>
-        <button class="mode-button" type="button" data-mode="cpu">
-          <span class="mode-title">Versus computer</span>
-          <span class="mode-desc">Play against a steady AI opponent</span>
-        </button>
+      <div class="mode-grid">
+        <button class="mode-card" type="button" data-mode="cpu" aria-label="1 player versus computer"><img src="menu/one-player-vs-computer.webp" alt="1 player versus computer" width="512" height="512" draggable="false"></button>
+        <button class="mode-card" type="button" data-mode="pvp" aria-label="2 player: pass and play on one device"><img src="menu/two-player-snooker.webp" alt="2 player" width="512" height="512" draggable="false"></button>
       </div>
       <div class="panel-links">
         <button class="link-button" type="button" id="resume-button" hidden>Resume game</button>

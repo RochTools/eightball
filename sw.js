@@ -1,5 +1,5 @@
 /* Eightball service worker — app-shell cache, offline first. */
-const VERSION = 'eightball-v17';
+const VERSION = 'eightball-v19';
 const SHELL = [
   './',
   './index.html',
@@ -10,7 +10,9 @@ const SHELL = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/maskable-192.png',
-  './icons/maskable-512.png'
+  './icons/maskable-512.png',
+  './menu/one-player-vs-computer.webp',
+  './menu/two-player-snooker.webp'
 ];
 
 self.addEventListener('install', (event) => {
