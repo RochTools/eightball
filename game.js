@@ -103,7 +103,7 @@
       if (this.play('ball', 0.35 + strength * 0.65)) return;
       this.burst(2600 + strength * 900, 1.1, 0.045 + strength * 0.03, Math.min(0.9, 0.08 + strength * 0.7));
     },
-    cushion(strength) { if (this.play('cushion', 0.3 + strength)) return; this.burst(420, 1.4, 0.09, Math.min(0.5, 0.05 + strength * 0.35)); },
+    cushion(strength) { const t = performance.now(); if (t - (this.lastCushion || 0) < 30) return; this.lastCushion = t; if (this.play('cushion', 0.3 + strength)) return; this.burst(420, 1.4, 0.09, Math.min(0.5, 0.05 + strength * 0.35)); },
     pocket() {
       if (this.play('pocket')) return;
       const c = this.ensure(); if (!c) return;
@@ -408,7 +408,6 @@
         if (nsp < STOP_SPEED) nsp = 0;
         const f = nsp / sp; b.vx *= f; b.vy *= f;
         b.x += b.vx * dt; b.y += b.vy * dt;
-        b.dirty = true;
       }
     }
     // ball-ball collisions (two relaxation passes)
@@ -423,7 +422,6 @@
           if (d2 >= 4 * R * R || d2 === 0) continue;
           const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, overlap = 2 * R - d;
           a.x -= nx * overlap / 2; a.y -= ny * overlap / 2; b.x += nx * overlap / 2; b.y += ny * overlap / 2;
-          a.dirty = b.dirty = true;
           const rvx = b.vx - a.vx, rvy = b.vy - a.vy, vn = rvx * nx + rvy * ny;
           if (vn >= 0) continue;
           const jimp = -(1 + BALL_REST) * vn / 2;
@@ -467,7 +465,6 @@
 
   function pocketBall(b, p) {
     b.sinking = { px: p.x, py: p.y, t: 0, scale: 1 };
-    b.dirty = true;
     b.vx = 0; b.vy = 0;
     audio.pocket();
     if (game.shot) game.shot.pocketed.push(b);
@@ -862,17 +859,14 @@
 
   function applyWorld(c) { const m = view.matrix; c.setTransform(m.a, m.b, m.c, m.d, m.e, m.f); }
 
-  function drawTable() {
-    if (!view.ready) return;
-    if (!view.tableCache) {
-      const off = document.createElement('canvas'); off.width = canvas.width; off.height = canvas.height;
-      const oc = off.getContext('2d');
-      applyWorld(oc);
-      oc.drawImage(tableImage, WORLD.x, WORLD.y, WORLD.w, WORLD.h);
-      view.tableCache = off;
-    }
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(view.tableCache, 0, 0);
+  const bgCanvas = document.getElementById('table-bg');
+  function drawTable() {                       // paints the static table once per resize, not every frame
+    if (!view.ready || view.tableCache) return;
+    bgCanvas.width = canvas.width; bgCanvas.height = canvas.height;
+    const oc = bgCanvas.getContext('2d');
+    applyWorld(oc);
+    oc.drawImage(tableImage, WORLD.x, WORLD.y, WORLD.w, WORLD.h);
+    view.tableCache = true;
   }
 
   // A ball's face is re-painted only while it moves (it rolls); a resting ball is just one drawImage.
@@ -893,13 +887,14 @@
     let s = b.s;
     if (isStripe) { const z = Math.max(-0.5, Math.min(0.5, s.z)); s = Math.hypot(s.x, s.y) < 1e-3 ? { x: 0.87, y: 0, z: z } : normalize3(s.x, s.y, z); }
     if (isStripe) {
-      if (!b.bandCv || b.bandCv.width !== D) { b.bandCv = document.createElement('canvas'); b.bandCv.width = D; b.bandCv.height = D; b.bandCtx = b.bandCv.getContext('2d'); b.bandImg = b.bandCtx.createImageData(D, D); }
-      const img = b.bandImg, d = img.data, cx = D / 2, rr = D / 2, cr = parseInt(b.color.slice(1, 3), 16), cg = parseInt(b.color.slice(3, 5), 16), cb = parseInt(b.color.slice(5, 7), 16);
-      const HALF = 0.55, EDGE = 1.6 / rr;
-      for (let y = 0; y < D; y++) {
+      const BD = Math.max(24, Math.ceil(D / 2));
+      if (!b.bandCv || b.bandCv.width !== BD) { b.bandCv = document.createElement('canvas'); b.bandCv.width = BD; b.bandCv.height = BD; b.bandCtx = b.bandCv.getContext('2d'); b.bandImg = b.bandCtx.createImageData(BD, BD); }
+      const img = b.bandImg, d = img.data, cx = BD / 2, rr = BD / 2, cr = parseInt(b.color.slice(1, 3), 16), cg = parseInt(b.color.slice(3, 5), 16), cb = parseInt(b.color.slice(5, 7), 16);
+      const HALF = 0.55, EDGE = 1.3 / rr;
+      for (let y = 0; y < BD; y++) {
         const ny = (y + 0.5 - cx) / rr;
-        for (let x = 0; x < D; x++) {
-          const nx = (x + 0.5 - cx) / rr, q = nx * nx + ny * ny, o = (y * D + x) * 4;
+        for (let x = 0; x < BD; x++) {
+          const nx = (x + 0.5 - cx) / rr, q = nx * nx + ny * ny, o = (y * BD + x) * 4;
           if (q >= 1) { d[o + 3] = 0; continue; }
           const dot = Math.abs(nx * s.x + ny * s.y + Math.sqrt(1 - q) * s.z);
           let a = (HALF - dot) / EDGE + 0.5; a = a < 0 ? 0 : a > 1 ? 1 : a;
@@ -925,11 +920,11 @@
     g.drawImage(sprites.shade, -D / (2 * k), -D / (2 * k), D / k, D / k);
     g.restore();
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.6; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.stroke();
-    b.dirty = false;
+    b.dirty = false; b.sp = { x: b.s.x, y: b.s.y, z: b.s.z };
   }
 
   function drawBall(b) {
-    if (b.dirty || !b.spr || b.spr.width !== sprites.D) paintBall(b);
+    if (!b.spr || b.dirty || b.spr.width !== sprites.D || !b.sp || b.s.x * b.sp.x + b.s.y * b.sp.y + b.s.z * b.sp.z < 0.9985) paintBall(b);
     const k = sprites.k, sc = b.sinking ? b.sinking.scale : 1, w = sprites.D / k * sc;
     if (!b.sinking) { const sw = sprites.shadow.width / k; ctx.drawImage(sprites.shadow, b.x + 2.2 - sw / 2, b.y + 3.2 - sw / 2, sw, sw); }
     ctx.drawImage(b.spr, b.x - w / 2, b.y - w / 2, w, w);
@@ -1026,7 +1021,9 @@
     } else if (game.state === 'rolling') {
       animating = true;
       acc += dt;
-      while (acc >= STEP) { stepPhysics(STEP); acc -= STEP; }
+      let n = 0;
+      while (acc >= STEP && n < 6) { stepPhysics(STEP); acc -= STEP; n++; }
+      if (acc > STEP * 6) acc = 0;
       if (!anyMoving()) { acc = 0; resolveShot(); }
     } else if (game.state === 'aim') {
       updateAi(dt); smoothAim(dt);
@@ -1203,5 +1200,5 @@
   updateHud();
   refreshControls();
   requestAnimationFrame(frame);
-  window.__eight = { game, endGame, updateHud };
+  window.__eight = { game, endGame, updateHud, shoot };
 })();

@@ -166,7 +166,12 @@ body{background:radial-gradient(ellipse at 50% 46%,#2f86ff 0%,#1559e0 42%,#0a2d9
 .mini-ball span{width:14px;height:14px;font-size:9px;font-weight:800;line-height:14px;text-align:center;color:#111}
 .mini-ball.unknown span{width:auto;height:auto;font-size:12px}
 .chip-group{font-size:12px}
-.chip.active{border:2px solid #ffe08a;background:linear-gradient(180deg,rgba(40,110,235,.95),rgba(14,60,175,.95));box-shadow:0 0 0 2px rgba(255,224,138,.35),0 0 18px 4px rgba(255,214,90,.75);animation:turn-glow 1.1s ease-in-out infinite alternate}
+.chip{position:relative}
+.chip.active{border:2px solid #ffe08a;background:linear-gradient(180deg,rgba(40,110,235,.95),rgba(14,60,175,.95));box-shadow:0 0 0 2px rgba(255,224,138,.35),0 0 12px 3px rgba(255,214,90,.6)}
+.chip.active::after{content:'';position:absolute;inset:-3px;border-radius:inherit;box-shadow:0 0 22px 8px rgba(255,214,90,.95);opacity:.2;pointer-events:none;animation:turn-glow 1.1s ease-in-out infinite alternate;will-change:opacity}
 .chip.active .chip-name{color:#fff;font-weight:700}
 .chip.active .chip-dot{width:8px;height:8px;background:#ffe08a;box-shadow:0 0 10px 2px #ffe08a}
-@keyframes turn-glow{from{box-shadow:0 0 0 2px rgba(255,224,138,.25),0 0 10px 2px rgba(255,214,90,.5)}to{box-shadow:0 0 0 3px rgba(255,224,138,.5),0 0 22px 7px rgba(255,214,90,.95)}}
+@keyframes turn-glow{from{opacity:.15}to{opacity:1}}
+
+/* the wooden table is painted once on a canvas of its own; the moving balls live on a transparent canvas above it */
+.table-canvas.bg{pointer-events:none;cursor:default}
