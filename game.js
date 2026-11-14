@@ -116,8 +116,8 @@
     /* Optional mp3 files in sounds/ (first name that exists is used; a missing file keeps the built-in synth sound):
        shot.mp3 cue hits the ball | ball.mp3 ball touches ball | foul.mp3 wrong ball / foul | gameover.mp3 game over
        (optional: cushion.mp3 rail, pocket.mp3 ball drops in) */
-    FILES: { shot: ['shot', 'cue'], ball: ['ball', 'click'], foul: ['foul', 'wrong'], gameover: ['gameover', 'win'], cushion: ['cushion', 'rail'], pocket: ['pocket'] },
-    VOL: { shot: 1, ball: 0.9, foul: 1, gameover: 1, cushion: 0.7, pocket: 0.9 },
+    FILES: { shot: ['shot', 'cue'], ball: ['ball', 'click'], foul: ['foul', 'wrong'], gameover: ['gameover', 'win'], cushion: ['cushion', 'rail'], pocket: ['pocket'], tick: ['tick', 'aim'] },
+    VOL: { shot: 1, ball: 0.9, foul: 1, gameover: 1, cushion: 0.7, pocket: 0.9, tick: 0.6 },
     buf: {}, loading: false,
     async load() {
       const c = this.ctx; if (this.loading || !c) return; this.loading = true;
@@ -134,6 +134,15 @@
       const src = c.createBufferSource(); src.buffer = b;
       const g = c.createGain(); g.gain.value = Math.min(1, (this.VOL[key] || 1) * (vol === undefined ? 1 : vol));
       src.connect(g).connect(c.destination); src.start(); return true;
+    },
+    tick() {                                      // one small "tick" per mark the aim line passes
+      const now = performance.now(); if (now - (this.lastTick || 0) < 35) return; this.lastTick = now;
+      if (this.play('tick')) return;
+      const c = this.ensure(); if (!c || !this.enabled) return;
+      const t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+      o.type = 'square'; o.frequency.setValueAtTime(2600, t); o.frequency.exponentialRampToValueAtTime(1500, t + 0.03);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      o.connect(g).connect(c.destination); o.start(t); o.stop(t + 0.04);
     },
     toggle() {
       this.enabled = !this.enabled;
@@ -1075,6 +1084,7 @@
     if (!dx) return;
     game.aimTarget = (game.aimTarget === null ? game.aim : game.aimTarget) + dx * AIM_PER_PX;
     strip.off = (strip.off + dx) % 15;
+    strip.acc = (strip.acc || 0) + Math.abs(dx); if (strip.acc >= 15) { strip.acc %= 15; audio.tick(); }
     ui.aimTicks.style.transform = `translateX(${strip.off}px)`;
     invalidate();
   });
@@ -1086,7 +1096,7 @@
   let kbPower = 0.55;
   const nudgeAim = (dir, fine) => {
     if (game.state !== 'aim' || isCpuTurn()) return;
-    game.aimTarget = (game.aimTarget === null ? game.aim : game.aimTarget) + dir * (fine ? 0.05 : 0.3) * Math.PI / 180; invalidate();
+    game.aimTarget = (game.aimTarget === null ? game.aim : game.aimTarget) + dir * (fine ? 0.05 : 0.3) * Math.PI / 180; audio.tick(); invalidate();
   };
   window.addEventListener('keydown', (e) => {
     if (ui.helpDialog.open) return;
