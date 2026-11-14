@@ -1,5 +1,5 @@
 /* Eightball service worker — app-shell cache, offline first. */
-const VERSION = 'eightball-v15';
+const VERSION = 'eightball-v16';
 const SHELL = [
   './',
   './index.html',
