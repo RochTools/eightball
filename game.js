@@ -306,10 +306,12 @@
   const INNER = { l: PLAY.left + R + 6, r: PLAY.right - R - 6, t: PLAY.top + R + 6, b: PLAY.bottom - R - 6 };
   // Away from the rails no cushion or pocket can be touched, so those tests are skipped (most of the table, most of the time).
   const inInterior = (x, y) => x > INNER.l && x < INNER.r && y > INNER.t && y < INNER.b;
+  const CLOSEST = { x: 0, y: 0 };           // reused result: read it right away, don't keep it
   function closestOnSegment(s, px, py) {
     let t = ((px - s.x1) * s.dx + (py - s.y1) * s.dy) / (s.len * s.len);
-    t = Math.max(0, Math.min(1, t));
-    return { x: s.x1 + s.dx * t, y: s.y1 + s.dy * t };
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    CLOSEST.x = s.x1 + s.dx * t; CLOSEST.y = s.y1 + s.dy * t;
+    return CLOSEST;
   }
   function circleHitsSegment(x, y, r, s) {
     let t = ((x - s.x1) * s.dx + (y - s.y1) * s.dy) / (s.len * s.len);
@@ -382,12 +384,11 @@
   function rotateAxis(v, ax, ay, az, ang) {
     // Rodrigues rotation of vector v about unit axis a by ang
     const c = Math.cos(ang), s = Math.sin(ang), t = 1 - c;
-    const dot = ax * v.x + ay * v.y + az * v.z;
-    return {
-      x: v.x * c + (ay * v.z - az * v.y) * s + ax * dot * t,
-      y: v.y * c + (az * v.x - ax * v.z) * s + ay * dot * t,
-      z: v.z * c + (ax * v.y - ay * v.x) * s + az * dot * t
-    };
+    const dot = ax * v.x + ay * v.y + az * v.z, x = v.x, y = v.y, z = v.z;
+    v.x = x * c + (ay * z - az * y) * s + ax * dot * t;
+    v.y = y * c + (az * x - ax * z) * s + ay * dot * t;
+    v.z = z * c + (ax * y - ay * x) * s + az * dot * t;
+    return v;
   }
 
   function stepPhysics(dt) {
@@ -408,7 +409,7 @@
       if (sp > 0) {
         // roll the sphere
         const ang = sp * dt / R;
-        b.s = rotateAxis(b.s, -b.vy / sp, b.vx / sp, 0, ang);
+        rotateAxis(b.s, -b.vy / sp, b.vx / sp, 0, ang);
         let nsp = sp * (1 - DRAG * dt) - ROLL_DECEL * dt;
         if (nsp < STOP_SPEED) nsp = 0;
         const f = nsp / sp; b.vx *= f; b.vy *= f;
@@ -925,7 +926,7 @@
     g.drawImage(sprites.shade, -D / (2 * k), -D / (2 * k), D / k, D / k);
     g.restore();
     g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.6; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.stroke();
-    b.dirty = false; b.sp = { x: b.s.x, y: b.s.y, z: b.s.z };
+    b.dirty = false; if (b.sp) { b.sp.x = b.s.x; b.sp.y = b.s.y; b.sp.z = b.s.z; } else b.sp = { x: b.s.x, y: b.s.y, z: b.s.z };
   }
 
   let paintBudget = 0;
@@ -1233,12 +1234,21 @@
     tasks.push(null);            // warm-up step below
     // warm-up: paint every ball's picture once so the first break doesn't have to allocate and paint them cold
     const warm = () => {
-      try { if (sprites.k) { const rb = rack(); for (let r = 0; r < 2; r++) for (const b of rb) { b.s = rotateAxis(b.s, 0.3, 0.9, 0, 0.4 + r); paintBall(b); } } } catch (_) { /* warm-up only */ }
+      try { if (sprites.k) { const rb = rack(); for (let r = 0; r < 2; r++) for (const b of rb) { rotateAxis(b.s, 0.3, 0.9, 0, 0.4 + r); paintBall(b); } } } catch (_) { /* warm-up only */ }
       done++; fill.style.width = '100%';
+    };
+    const warmPhysics = () => {
+      const keep = { balls: game.balls, shot: game.shot, snd: audio.enabled };
+      try {
+        audio.enabled = false; game.shot = null; game.balls = rack();
+        const cue = game.balls.find((b) => b.n === 0); cue.x = HEAD_X; cue.vx = MAX_SPEED; cue.vy = 40;
+        for (let i = 0; i < 240; i++) stepPhysics(STEP);
+      } catch (_) { /* warm-up only */ }
+      finally { game.balls = keep.balls; game.shot = keep.shot; audio.enabled = keep.snd; hudCache.length = 0; updateHud(); }
     };
     const finish = () => {
       if (finished) return; finished = true;
-      warm(); text.textContent = 'Ready';
+      warmPhysics(); warm(); text.textContent = 'Ready';
       setTimeout(() => { loader.classList.add('done'); setTimeout(() => { loader.hidden = true; }, 350); }, 180);
     };
     Promise.all(tasks.filter(Boolean).concat(soundsP)).then(() => requestAnimationFrame(() => setTimeout(finish, 0)));
