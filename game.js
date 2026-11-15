@@ -72,25 +72,26 @@
   /* Audio (synthesised, no files)                                       */
   /* ------------------------------------------------------------------ */
   const audio = {
-    ctx: null, enabled: localStorage.getItem('eightball.sound') !== 'off', lastClick: 0, noise: null,
-    ensure() {
+    voices: 0, ctx: null, enabled: localStorage.getItem('eightball.sound') !== 'off', lastClick: 0, noise: null,
+    ensure(noResume) {
       if (!this.enabled) return null;
       if (!this.ctx) {
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return null;
         this.ctx = new AC();
-        setTimeout(() => this.load(), 0);
+        if (!noResume) setTimeout(() => this.load(), 0);
         const len = this.ctx.sampleRate * 0.5;
         this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
         const d = this.noise.getChannelData(0);
         for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       }
-      if (this.ctx.state === 'suspended') this.ctx.resume();
+      if (!noResume && this.ctx.state === 'suspended') this.ctx.resume();
       return this.ctx;
     },
     burst(freq, q, dur, gain) {
-      const c = this.ensure(); if (!c) return;
-      const src = c.createBufferSource(); src.buffer = this.noise;
+      const c = this.ensure(); if (!c || this.voices >= 6) return;
+      this.voices++;
+      const src = c.createBufferSource(); src.buffer = this.noise; src.onended = () => { this.voices--; };
       const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
       const g = c.createGain();
       const t = c.currentTime;
@@ -99,7 +100,7 @@
       src.start(t); src.stop(t + dur + 0.02);
     },
     click(strength) {
-      const now = performance.now(); if (now - this.lastClick < 22) return; this.lastClick = now;
+      const now = performance.now(); if (now - this.lastClick < 35) return; this.lastClick = now;
       if (this.play('ball', 0.35 + strength * 0.65)) return;
       this.burst(2600 + strength * 900, 1.1, 0.045 + strength * 0.03, Math.min(0.9, 0.08 + strength * 0.7));
     },
@@ -119,19 +120,23 @@
     FILES: { shot: ['shot', 'cue'], ball: ['ball', 'click'], foul: ['foul', 'wrong'], gameover: ['gameover', 'win'], cushion: ['cushion', 'rail'], pocket: ['pocket'], tick: ['tick', 'aim'] },
     VOL: { shot: 1, ball: 0.9, foul: 1, gameover: 1, cushion: 0.7, pocket: 0.9, tick: 0.6 },
     buf: {}, loading: false,
-    async load() {
-      const c = this.ctx; if (this.loading || !c) return; this.loading = true;
-      await Promise.all(Object.keys(this.FILES).map(async (key) => {
+    async load(onStep) {
+      const c = this.ctx; if (this.loading || !c) return this.loadP; this.loading = true;
+      this.loadP = Promise.all(Object.keys(this.FILES).map(async (key) => {
         for (const name of this.FILES[key]) {
-          try { const r = await fetch('sounds/' + name + '.mp3'); if (!r.ok) continue; this.buf[key] = await c.decodeAudioData(await r.arrayBuffer()); return; }
+          try { const r = await fetch('sounds/' + name + '.mp3'); if (!r.ok) continue; this.buf[key] = await c.decodeAudioData(await r.arrayBuffer()); break; }
           catch (_) { /* missing / not decodable: try the next name */ }
         }
+        if (onStep) onStep();
       }));
+      return this.loadP;
     },
     play(key, vol) {
       const b = this.buf[key]; if (!b || !this.enabled) return false;
       const c = this.ensure(); if (!c) return false;
-      const src = c.createBufferSource(); src.buffer = b;
+      if (this.voices >= 6 && key !== 'shot' && key !== 'gameover' && key !== 'foul') return true;     // plenty already playing
+      this.voices++;
+      const src = c.createBufferSource(); src.buffer = b; src.onended = () => { this.voices--; };
       const g = c.createGain(); g.gain.value = Math.min(1, (this.VOL[key] || 1) * (vol === undefined ? 1 : vol));
       src.connect(g).connect(c.destination); src.start(); return true;
     },
@@ -762,7 +767,7 @@
   /* Rendering                                                           */
   /* ------------------------------------------------------------------ */
   const FIT_W = 1230, FIT_H = 690;
-  const view = { w: 0, h: 0, dpr: 1, scale: 1, portrait: false, matrix: new DOMMatrix(), inverse: new DOMMatrix(), tableCache: null, ready: false };
+  const view = { w: 0, h: 0, dpr: 1, scale: 1, portrait: false, matrix: new DOMMatrix(), inverse: new DOMMatrix(), tableCache: null, ready: false, pxCap: Math.max(1.0e6, Math.min(2.2e6, +(localStorage.getItem('eightball.pxcap') || 2.2e6))) };
   const sprites = { k: 1, D: 0, shade: null, shadow: null, cue: null };
   const CUE_LEN = 440, CUE_M = 8, CUE_H = 30;
   let dirty = true;
@@ -776,10 +781,10 @@
   function resize() {
     const rect = canvas.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
-    // sharp but bounded: at most ~3.4M canvas pixels, whatever the screen
+    // sharp but bounded: the canvas pixel budget starts at ~2.2M and drops by itself on slow phones (see frame())
     let dpr = Math.min(2, window.devicePixelRatio || 1);
     const px = rect.width * rect.height;
-    if (px * dpr * dpr > 3.4e6) dpr = Math.max(1, Math.sqrt(3.4e6 / px));
+    if (px * dpr * dpr > view.pxCap) dpr = Math.max(0.75, Math.sqrt(view.pxCap / px));
     view.w = rect.width; view.h = rect.height; view.dpr = dpr;
     canvas.width = Math.round(rect.width * dpr); canvas.height = Math.round(rect.height * dpr);
     view.portrait = rect.height > rect.width;
@@ -923,8 +928,11 @@
     b.dirty = false; b.sp = { x: b.s.x, y: b.s.y, z: b.s.z };
   }
 
+  let paintBudget = 0;
   function drawBall(b) {
-    if (!b.spr || b.dirty || b.spr.width !== sprites.D || !b.sp || b.s.x * b.sp.x + b.s.y * b.sp.y + b.s.z * b.sp.z < 0.9985) paintBall(b);
+    const stale = b.spr && b.spr.width === sprites.D && !b.dirty && b.sp;
+    if (stale && paintBudget <= 0 && b.s.x * b.sp.x + b.s.y * b.sp.y + b.s.z * b.sp.z > 0.99) { /* out of paint budget this frame: reuse the last picture */ }
+    else if (!b.spr || b.dirty || b.spr.width !== sprites.D || !b.sp || b.s.x * b.sp.x + b.s.y * b.sp.y + b.s.z * b.sp.z < 0.9985) { paintBudget -= b.type === 'stripe' ? 2 : 1; paintBall(b); }
     const k = sprites.k, sc = b.sinking ? b.sinking.scale : 1, w = sprites.D / k * sc;
     if (!b.sinking) { const sw = sprites.shadow.width / k; ctx.drawImage(sprites.shadow, b.x + 2.2 - sw / 2, b.y + 3.2 - sw / 2, sw, sw); }
     ctx.drawImage(b.spr, b.x - w / 2, b.y - w / 2, w, w);
@@ -969,6 +977,7 @@
   }
 
   function render() {
+    paintBudget = 6;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTable();
@@ -1001,7 +1010,7 @@
   /* ------------------------------------------------------------------ */
   /* Main loop                                                           */
   /* ------------------------------------------------------------------ */
-  let last = performance.now(), acc = 0;
+  let last = performance.now(), acc = 0, slowEma = 0.016, slowFrames = 0;
   function smoothAim(dt) {      // fine-aim target: ease toward it, so swipes feel liquid
     if (game.aimTarget === null) return;
     let d = game.aimTarget - game.aim; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
@@ -1011,7 +1020,8 @@
   }
   function frame(now) {
     requestAnimationFrame(frame);
-    let dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const raw = (now - last) / 1000;
+    let dt = Math.min(0.05, raw); last = now;
     if (game.paused) dt = 0;
     let animating = false;
     if (game.paused) { /* frozen */ } else if (game.state === 'striking') {
@@ -1021,6 +1031,8 @@
     } else if (game.state === 'rolling') {
       animating = true;
       acc += dt;
+      // slow phone? shrink the canvas resolution a step (and remember it) so the next break is smooth
+      if (raw > 0 && raw < 0.5) { slowEma += (raw - slowEma) * 0.15; if (++slowFrames >= 14 && slowEma > 0.028 && view.pxCap > 1.05e6) { view.pxCap = Math.max(1.0e6, view.pxCap * 0.72); try { localStorage.setItem('eightball.pxcap', String(view.pxCap)); } catch (_) {} slowFrames = 0; slowEma = 0.016; resize(); } }
       let n = 0;
       while (acc >= STEP && n < 6) { stepPhysics(STEP); acc -= STEP; n++; }
       if (acc > STEP * 6) acc = 0;
@@ -1200,5 +1212,37 @@
   updateHud();
   refreshControls();
   requestAnimationFrame(frame);
+
+  /* Preload: fetch and prepare everything once, before the menu opens, so nothing loads while you play */
+  (function preload() {
+    const loader = $('loader'), fill = $('loader-fill'), text = $('loader-text');
+    const tasks = []; let done = 0, finished = false;
+    const total = () => tasks.length;
+    const step = (label) => { done++; fill.style.width = Math.round(done / total() * 100) + '%'; if (label) text.textContent = label; };
+    const track = (p, label) => { tasks.push(p); p.then(() => step(label), () => step(label)); return p; };
+    const img = (src) => new Promise((res) => { const i = new Image(); i.onload = i.onerror = () => res(i); i.src = src; if (i.complete) res(i); });
+    track(new Promise((res) => { if (tableImage.complete && tableImage.naturalWidth) res(); else { tableImage.addEventListener('load', res); tableImage.addEventListener('error', res); } }), 'Table…');
+    ['menu/one-player-vs-computer.webp', 'menu/two-player-snooker.webp'].forEach((s) => track(img(s), 'Menu…'));
+    // sounds: the audio context may be created before the first tap (it stays suspended until then); decoding runs now
+    const keys = Object.keys(audio.FILES).length;
+    for (let i = 0; i < keys; i++) tasks.push(null);
+    let soundsDone = 0; const soundStep = () => { soundsDone++; done++; fill.style.width = Math.round(done / total() * 100) + '%'; text.textContent = 'Sounds…'; };
+    const c = audio.ensure(true);
+    const soundsP = c ? audio.load(soundStep) : Promise.resolve();
+    if (!c) { for (let i = 0; i < keys; i++) { done++; } }
+    tasks.push(null);            // warm-up step below
+    // warm-up: paint every ball's picture once so the first break doesn't have to allocate and paint them cold
+    const warm = () => {
+      try { if (sprites.k) { const rb = rack(); for (let r = 0; r < 2; r++) for (const b of rb) { b.s = rotateAxis(b.s, 0.3, 0.9, 0, 0.4 + r); paintBall(b); } } } catch (_) { /* warm-up only */ }
+      done++; fill.style.width = '100%';
+    };
+    const finish = () => {
+      if (finished) return; finished = true;
+      warm(); text.textContent = 'Ready';
+      setTimeout(() => { loader.classList.add('done'); setTimeout(() => { loader.hidden = true; }, 350); }, 180);
+    };
+    Promise.all(tasks.filter(Boolean).concat(soundsP)).then(() => requestAnimationFrame(() => setTimeout(finish, 0)));
+    setTimeout(finish, 9000);    // never block the game for long, whatever is slow
+  })();
   window.__eight = { game, endGame, updateHud, shoot };
 })();
