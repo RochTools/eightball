@@ -40,14 +40,14 @@
   const RACK = [[1], [9, 2], [10, 8, 3], [11, 7, 14, 4], [5, 13, 15, 6, 12]];
 
   /* Physics tuning */
-  const MAX_SPEED = 2300;      // px/s at 100% power
+  const MAX_SPEED = 2700;      // px/s at 100% power — quicker, livelier shots
   const DRAG = 0.55;           // per-second proportional drag
   const ROLL_DECEL = 36;       // px/s² constant deceleration
   const STOP_SPEED = 5;
   const BALL_REST = 0.96;
   const CUSHION_REST = 0.78;
   const CUSHION_TANGENT = 0.94;
-  const STEP = 1 / 240;
+  const STEP = 1 / 200;       // slightly fewer physics passes on mobile during the break
 
   /* ------------------------------------------------------------------ */
   /* DOM                                                                 */
@@ -250,10 +250,18 @@
     invalidate();
   }
 
+  // In two-player hot-seat mode, reverse the power pull for Player 2 so
+  // each player pulls the cue toward their own side of the phone.
+  function powerStartsFromRight() {
+    const defaultRight = view.portrait;
+    return game.mode === 'pvp' && game.current === 1 ? !defaultRight : defaultRight;
+  }
+
   function refreshControls() {
     const can = game.state === 'aim' && !isCpuTurn() && !game.paused;
     ui.aimStrip.classList.toggle('disabled', !can);
     ui.power.classList.toggle('disabled', !(can && game.cueValid));
+    ui.power.classList.toggle('from-right', powerStartsFromRight());
   }
 
   /* Short messages fade by themselves; a "sticky" hint (ball in hand…) stays until it no longer applies. */
@@ -825,6 +833,7 @@
         '--menu-x': '10px', '--menu-y': '8px'
       });
     }
+    ui.power.classList.toggle('from-right', powerStartsFromRight());
   }
 
   /* Everything that is the same for every ball / every frame is painted once per resize into small sprites. */
@@ -1096,7 +1105,7 @@
   function setPull(t) {
     pull.t = t;
     const px = t * pull.range;
-    ui.ppHandle.style.transform = `translateX(${view.portrait ? -px : px}px)`;
+    ui.ppHandle.style.transform = `translateX(${powerStartsFromRight() ? -px : px}px)`;
     ui.ppFill.style.width = t > 0 ? `${px + 31}px` : '0px';
     ui.ppVal.textContent = String(Math.round(t * 100));
     ui.power.classList.toggle('cancel', pull.id !== null && t < PULL_MIN);
@@ -1111,7 +1120,8 @@
   });
   ui.ppHandle.addEventListener('pointermove', (e) => {
     if (e.pointerId !== pull.id) return;
-    const t = Math.max(0, Math.min(1, (view.portrait ? pull.x0 - e.clientX : e.clientX - pull.x0) / pull.range));
+    const dx = e.clientX - pull.x0;
+    const t = Math.max(0, Math.min(1, (powerStartsFromRight() ? -dx : dx) / pull.range));
     setPull(t); game.power = Math.max(0.05, t); invalidate();      // the cue on the table draws back as you pull
   });
   const releasePull = (e, cancelled) => {

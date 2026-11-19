@@ -54,6 +54,10 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:
   background:rgba(8,14,10,.55);border:1px solid var(--line);touch-action:none;transition:opacity .2s}
 .pp-fill{position:absolute;top:7px;bottom:7px;left:7px;width:0;border-radius:16px;background:linear-gradient(90deg,#4f8a5f,#c9b58d 55%,#d4674a);opacity:.9}
 .pp-handle{position:absolute;left:3px;top:3px;width:38px;height:38px;border-radius:50%;background:#efe8d4;border:3px solid #1a251b;box-shadow:0 3px 10px #0009;display:grid;place-items:center;color:#1a251b;touch-action:none;cursor:grab;transition:transform .2s ease-out}
+/* Player on the opposite side starts and pulls from the opposite end. */
+.power-pull.from-right .pp-handle{left:auto;right:3px}
+.power-pull.from-right .pp-fill{left:auto;right:7px;background:linear-gradient(270deg,#4f8a5f,#c9b58d 55%,#d4674a)}
+.power-pull.from-right .pp-arrow{transform:scaleX(-1)}
 .power-pull.active .pp-handle,.power-pull.active .pp-fill{transition:none}
 .power-pull.active .pp-handle{cursor:grabbing}
 .power-pull.cancel .pp-handle{background:#9aa393}
@@ -115,14 +119,12 @@ svg{display:block;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:
 
 /* Portrait = phone held sideways (rotated left): the knob starts at the right end and is pulled left (= downward for the player);
    chips sit by the two side pockets and read sideways */
-.portrait .pp-handle{left:auto;right:3px}
-.portrait .pp-fill{left:auto;right:7px;background:linear-gradient(270deg,#4f8a5f,#c9b58d 55%,#d4674a)}
-.portrait .pp-arrow{transform:scaleX(-1)}
 .portrait .pp-val{transform:rotate(90deg)}
 .portrait .hud{position:static;display:contents}
-.portrait .chip{position:fixed;top:var(--chip-y,40%);transform:translate(-50%,-50%) rotate(90deg);transform-origin:center;z-index:5}
-.portrait #player-1{left:calc(100vw - 19px);top:calc(var(--chip-y,40%) + 300px)}
-.portrait #player-2{left:calc(100vw - 19px)}
+.portrait .chip{position:fixed;top:50%;transform:translate(-50%,-50%) rotate(90deg);transform-origin:center;z-index:5}
+/* Pass-and-play: each player's HUD sits on their own side and faces them. */
+.portrait #player-1{left:19px;top:50%;transform:translate(-50%,-50%) rotate(90deg)}
+.portrait #player-2{left:calc(100vw - 19px);top:50%;transform:translate(-50%,-50%) rotate(-90deg)}
 .portrait .toast{transform:translateX(-50%) rotate(90deg);top:calc(50% - 40px);left:18%;max-width:min(70vh,460px)}
 
 /* ---------- Blue theme ---------- */
