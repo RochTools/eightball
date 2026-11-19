@@ -424,16 +424,26 @@
         b.x += b.vx * dt; b.y += b.vy * dt;
       }
     }
-    // ball-ball collisions (two relaxation passes)
+    // Ball-ball collisions. Build a compact list once per step so pocketed /
+    // sinking balls never enter the pair loop. Cheap axis rejection avoids
+    // square roots and distance math for the many separated pairs on a break.
+    const active = [];
+    for (let i = 0; i < balls.length; i++) {
+      const b = balls[i];
+      if (b.inPlay && !b.sinking) active.push(b);
+    }
+    const diameter = 2 * R, diameter2 = diameter * diameter;
     for (let pass = 0; pass < 2; pass++) {
-      for (let i = 0; i < balls.length; i++) {
-        const a = balls[i]; if (!a.inPlay || a.sinking) continue;
+      for (let i = 0; i < active.length; i++) {
+        const a = active[i];
         const am = a.vx !== 0 || a.vy !== 0;
-        for (let j = i + 1; j < balls.length; j++) {
-          const b = balls[j]; if (!b.inPlay || b.sinking) continue;
+        for (let j = i + 1; j < active.length; j++) {
+          const b = active[j];
           if (!am && b.vx === 0 && b.vy === 0) continue;      // two resting balls can't collide
-          const dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
-          if (d2 >= 4 * R * R || d2 === 0) continue;
+          const dx = b.x - a.x, dy = b.y - a.y;
+          if (dx <= -diameter || dx >= diameter || dy <= -diameter || dy >= diameter) continue;
+          const d2 = dx * dx + dy * dy;
+          if (d2 >= diameter2 || d2 === 0) continue;
           const d = Math.sqrt(d2), nx = dx / d, ny = dy / d, overlap = 2 * R - d;
           a.x -= nx * overlap / 2; a.y -= ny * overlap / 2; b.x += nx * overlap / 2; b.y += ny * overlap / 2;
           const rvx = b.vx - a.vx, rvy = b.vy - a.vy, vn = rvx * nx + rvy * ny;
@@ -467,7 +477,8 @@
         }
       }
       for (const p of POCKETS) {
-        if (Math.hypot(p.x - b.x, p.y - b.y) < p.r) { pocketBall(b, p); break; }
+        const px = p.x - b.x, py = p.y - b.y;
+        if (px * px + py * py < p.r * p.r) { pocketBall(b, p); break; }
       }
       if (!b.sinking && (b.x < PLAY.left - 40 || b.x > PLAY.right + 40 || b.y < PLAY.top - 40 || b.y > PLAY.bottom + 40)) {
         let near = POCKETS[0], nd = Infinity;
@@ -861,14 +872,18 @@
     cg.scale(k, k); cg.translate(CUE_M, CUE_H / 2);
     cg.shadowColor = 'rgba(0,0,0,.4)'; cg.shadowBlur = 6 * k; cg.shadowOffsetX = 2 * k; cg.shadowOffsetY = 4 * k;
     const len = CUE_LEN, grad = cg.createLinearGradient(0, 0, len, 0);
-    grad.addColorStop(0, '#e9d7b0'); grad.addColorStop(0.35, '#caa571'); grad.addColorStop(0.72, '#6e4425'); grad.addColorStop(1, '#2b1a10');
+    grad.addColorStop(0, '#f4e7c8'); grad.addColorStop(0.18, '#d7b77e'); grad.addColorStop(0.52, '#a8753f'); grad.addColorStop(0.78, '#5b351f'); grad.addColorStop(1, '#21130e');
     cg.fillStyle = grad;
-    cg.beginPath(); cg.moveTo(0, -2.2); cg.lineTo(len, -5.2); cg.lineTo(len, 5.2); cg.lineTo(0, 2.2); cg.closePath(); cg.fill();
+    cg.beginPath(); cg.moveTo(0, -1.5); cg.lineTo(len, -5.6); cg.lineTo(len, 5.6); cg.lineTo(0, 1.5); cg.closePath(); cg.fill();
     cg.shadowColor = 'transparent';
-    cg.strokeStyle = 'rgba(255,255,255,.28)'; cg.lineWidth = 0.9; cg.beginPath(); cg.moveTo(6, -1); cg.lineTo(len - 10, -3); cg.stroke();
-    cg.fillStyle = '#1d1511'; cg.fillRect(len * 0.66, -4.5, len * 0.2, 9);
-    cg.fillStyle = '#f1ece0'; cg.fillRect(0, -2.3, 9, 4.6);
-    cg.fillStyle = '#3f6fb8'; cg.beginPath(); cg.arc(0, 0, 2.3, Math.PI / 2, Math.PI * 1.5); cg.fill();
+    // polished maple grain and a clearly defined professional cue tip / ferrule
+    cg.strokeStyle = 'rgba(255,244,211,.55)'; cg.lineWidth = 1; cg.beginPath(); cg.moveTo(12, -0.7); cg.lineTo(len - 12, -3.1); cg.stroke();
+    cg.strokeStyle = 'rgba(55,28,13,.32)'; cg.lineWidth = 0.8; cg.beginPath(); cg.moveTo(26, 0.8); cg.lineTo(len - 18, 3.7); cg.stroke();
+    cg.fillStyle = '#241711'; cg.fillRect(len * 0.68, -5, len * 0.19, 10);
+    cg.fillStyle = '#d7d1c2'; cg.fillRect(7, -1.8, 7, 3.6);
+    cg.fillStyle = '#3f6fb8'; cg.fillRect(0, -1.6, 3.5, 3.2);
+    cg.fillStyle = '#b78b4e'; cg.fillRect(len * 0.65, -5.2, 2.5, 10.4);
+    cg.fillStyle = '#d6b77d'; cg.fillRect(len * 0.88, -5.3, 2, 10.6);
     sprites.cue = cu;
   }
 
@@ -1068,6 +1083,15 @@
     game.aim = Math.atan2(p.y - cue.y, p.x - cue.x);
     invalidate();
   }
+  function cueStickHit(p) {
+    const cue = cueBall();
+    const bx = -Math.cos(game.aim), by = -Math.sin(game.aim);
+    const dx = p.x - cue.x, dy = p.y - cue.y;
+    const along = dx * bx + dy * by;
+    const across = Math.abs(dx * by - dy * bx);
+    return along > R + 8 && along < CUE_LEN * 0.82 && across < 19;
+  }
+  let cuePullStart = null;
   function moveCue(p) {
     const cue = cueBall(); const c = clampCue(p.x, p.y);
     cue.x = c.x; cue.y = c.y;
@@ -1081,18 +1105,32 @@
     canvas.setPointerCapture(e.pointerId);
     const p = toWorld(e); const cue = cueBall();
     if (game.ballInHand && Math.hypot(p.x - cue.x, p.y - cue.y) < R * 2.2) { game.dragging = 'cue'; moveCue(p); }
-    else { game.dragging = 'aim'; setAimTo(p); }
+    else if (game.cueValid && cueStickHit(p)) {
+      game.dragging = 'cue-shot';
+      cuePullStart = { x: p.x, y: p.y, aim: game.aim };
+      game.power = REST_POWER; invalidate();
+    } else { game.dragging = 'aim'; setAimTo(p); }
   });
   canvas.addEventListener('pointermove', (e) => {
     if (!game.dragging || game.state !== 'aim') return;
     const p = toWorld(e);
-    if (game.dragging === 'cue') moveCue(p); else setAimTo(p);
+    if (game.dragging === 'cue') moveCue(p);
+    else if (game.dragging === 'cue-shot' && cuePullStart) {
+      const bx = -Math.cos(cuePullStart.aim), by = -Math.sin(cuePullStart.aim);
+      const delta = (p.x - cuePullStart.x) * bx + (p.y - cuePullStart.y) * by;
+      game.power = Math.max(0.05, Math.min(1, REST_POWER + Math.max(0, delta) / 185));
+      invalidate();
+    } else setAimTo(p);
   });
   const endDrag = (e) => {
     if (!game.dragging) return;
     if (game.dragging === 'cue') {
       if (!game.cueValid) { placeCueDefault(); game.cueValid = true; refreshControls(); }
       invalidate();
+    } else if (game.dragging === 'cue-shot') {
+      const power = game.power; cuePullStart = null;
+      if (power >= REST_POWER + 0.035 && game.state === 'aim' && game.cueValid) shoot();
+      else { game.power = REST_POWER; invalidate(); }
     }
     game.dragging = null;
     try { canvas.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
